@@ -2,6 +2,8 @@
 .build/
 DerivedData/
 Veil.app/
+Veil.zip
+Veil.zip.sha256
 
 # Xcode user state
 *.xcodeproj/xcuserdata/

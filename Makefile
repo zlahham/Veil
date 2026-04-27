@@ -21,7 +21,7 @@ SWIFTFLAGS = -parse-as-library \
 
 SOURCES = $(shell find Sources -name '*.swift')
 
-.PHONY: build run clean bundle install sign dev icon
+.PHONY: build run clean bundle install sign dev icon release
 
 build: $(BINARY)
 
@@ -61,6 +61,21 @@ icon:
 	iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
 	rm -rf Resources/AppIcon.iconset
 	@echo "Wrote Resources/AppIcon.icns"
+
+# Build a release bundle for distribution. Outputs Veil.app and Veil.zip
+# alongside a SHA-256 checksum. Used by .github/workflows/release.yml.
+release:
+	swift build -c release
+	rm -rf $(DEV_BUNDLE)
+	mkdir -p $(DEV_BUNDLE)/Contents/MacOS
+	mkdir -p $(DEV_BUNDLE)/Contents/Resources
+	cp .build/release/$(APP_NAME) $(DEV_BUNDLE)/Contents/MacOS/$(APP_NAME)
+	cp Resources/Info.plist $(DEV_BUNDLE)/Contents/Info.plist
+	cp Resources/AppIcon.icns $(DEV_BUNDLE)/Contents/Resources/AppIcon.icns
+	$(MAKE) sign BUNDLE_PATH="$(DEV_BUNDLE)"
+	rm -f Veil.zip
+	ditto -c -k --keepParent $(DEV_BUNDLE) Veil.zip
+	shasum -a 256 Veil.zip | tee Veil.zip.sha256
 
 install: dev
 	pkill -x $(APP_NAME) || true

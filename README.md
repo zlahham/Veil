@@ -22,17 +22,21 @@ System items like Wi-Fi, Bluetooth, Battery, and Control Centre are owned by mac
 
 ## Install
 
+### Download (Apple Silicon, macOS 14+)
+
+Grab `Veil.zip` from the [latest release](https://github.com/zlahham/Veil/releases/latest), unzip it, and drop `Veil.app` into `/Applications`.
+
+The build is ad-hoc signed (not yet notarized through Apple's Developer Program), so Gatekeeper will refuse to open it on first launch. Right-click `Veil.app` → **Open** → confirm — macOS will remember the choice. A notarized Homebrew cask is planned.
+
+### From source
+
 ```bash
 git clone https://github.com/zlahham/Veil.git
 cd Veil
 make install
 ```
 
-`make install` builds with SPM, scaffolds `Veil.app/` at the project root, ad-hoc codesigns it (so Accessibility grants survive rebuilds), and launches it.
-
-Requires Xcode (or the full Command Line Tools) on macOS 14+.
-
-A Homebrew cask is planned once notarization is wired up.
+`make install` builds with SPM, scaffolds `Veil.app/` at the project root, ad-hoc codesigns it (so Accessibility grants survive rebuilds), and launches it. Requires Xcode (or the full Command Line Tools) on macOS 14+.
 
 ## First launch
 
