@@ -48,7 +48,11 @@ final class MenuBarController {
     func show() {
         control?.state = .showItems
         VeilSettings.shared.itemsHidden = false
-        cancelRehideTimer()
+        if VeilSettings.shared.autoRehide {
+            scheduleRehide()
+        } else {
+            cancelRehideTimer()
+        }
     }
 
     func hide() {
@@ -66,9 +70,10 @@ final class MenuBarController {
 
     // MARK: - Auto-rehide
 
-    /// Schedule a re-hide after the configured interval. Called by hover/scroll
-    /// paths that temporarily reveal items.
+    /// Schedule a re-hide after the configured interval. Honors the
+    /// `autoRehide` toggle and the user's interval setting.
     func scheduleRehide() {
+        guard VeilSettings.shared.autoRehide else { return }
         let interval = VeilSettings.shared.rehideInterval
         guard interval > 0 else { return }
         cancelRehideTimer()

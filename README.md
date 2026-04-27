@@ -1,6 +1,11 @@
 # Veil
 
+> Hide the noise in your menu bar.
+
 A lightweight macOS menu bar manager. Click the bolt to push cluttering items off-screen; click again to bring them back.
+
+![Menu bar with items shown](docs/screenshots/menubar-shown.png)
+![Menu bar with items hidden](docs/screenshots/menubar-hidden.png)
 
 - **Zero idle CPU.** Event-driven, no polling.
 - **Small footprint.** ~80 MB RSS, single binary, no external dependencies.
@@ -17,50 +22,52 @@ System items like Wi-Fi, Bluetooth, Battery, and Control Centre are owned by mac
 
 ## Install
 
-### From source
-
 ```bash
-git clone https://github.com/zaidlahham/Veil.git
+git clone https://github.com/zlahham/Veil.git
 cd Veil
 make install
 ```
 
 `make install` builds with SPM, scaffolds `Veil.app/` at the project root, ad-hoc codesigns it (so Accessibility grants survive rebuilds), and launches it.
 
-Requires Xcode (or the full Command Line Tools that ship with it) on macOS 14+.
+Requires Xcode (or the full Command Line Tools) on macOS 14+.
 
-### Homebrew
-
-Not yet — coming when distribution is wired up.
+A Homebrew cask is planned once notarization is wired up.
 
 ## First launch
 
-Veil will show a welcome window and ask for **Accessibility** permission. It uses this only to read the titles of menu bar items so it can list them in the Ice Bar. It does not click, modify, or send events on your behalf.
+Veil shows a welcome window and asks for **Accessibility** permission. It uses this only to read the titles of menu bar items so it can list them in the Ice Bar. It does not click, modify, or send events on your behalf.
 
 ## Usage
 
 - **Left-click the bolt** — toggle hide/show.
 - **Right-click the bolt** — context menu (Show Item List, Settings, Quit).
 - **Global hotkey** — assignable in Settings → Hotkeys.
-- **Cmd+drag any menu bar item** — reposition. macOS persists positions; Veil works with whatever order you choose.
+- **Cmd+drag any menu bar item** — reposition it. macOS persists positions; Veil works with whatever order you choose.
 
-## Settings
+### Item list (right-click → Show Item List)
 
-- **Appearance** — pick between bolt, sparkles, moon, eye, or cloud icons.
-- **Reveal hidden items** — show on hover/click/scroll over the menu bar.
-- **Auto-rehide** — re-collapse after a configurable delay.
-- **Launch at login** — registered via `SMAppService`.
-- **Hotkeys** — global combo to toggle hide.
+![Ice Bar](docs/screenshots/icebar.png)
+
+Lists everything Veil can see in your menu bar, including the items currently pushed off-screen. Clicking a row activates the owning app.
+
+### Settings
+
+| | |
+|--|--|
+| ![General](docs/screenshots/settings-general.png) | ![Hotkeys](docs/screenshots/settings-hotkeys.png) |
+| **General** — pick an icon (bolt, sparkles, moon, eye, cloud), reveal-on-hover/click/scroll, auto-rehide delay, launch at login. | **Hotkeys** — global combo to toggle hide. |
 
 ## Development
 
 ```bash
-swift build           # SPM build
-make install          # Build + bundle + sign + launch
-make clean            # Remove .build/
+swift build       # SPM build
+make install      # Build + bundle + sign + launch
+make icon         # Regenerate the app icon
+make clean        # Remove .build/
 ```
 
-The Makefile's `make sign` target ad-hoc codesigns the bundle; this keeps the same identity hash across rebuilds, so macOS doesn't ask you to re-grant Accessibility every time.
+The Makefile's `make sign` target ad-hoc codesigns the bundle; this keeps the same code identity across rebuilds, so macOS doesn't ask you to re-grant Accessibility every time.
 
 ### Project layout
 

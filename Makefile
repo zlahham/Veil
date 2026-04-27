@@ -21,7 +21,7 @@ SWIFTFLAGS = -parse-as-library \
 
 SOURCES = $(shell find Sources -name '*.swift')
 
-.PHONY: build run clean bundle install sign dev
+.PHONY: build run clean bundle install sign dev icon
 
 build: $(BINARY)
 
@@ -51,7 +51,16 @@ dev:
 	mkdir -p $(DEV_BUNDLE)/Contents/Resources
 	cp .build/arm64-apple-macosx/debug/$(APP_NAME) $(DEV_BUNDLE)/Contents/MacOS/$(APP_NAME)
 	cp Resources/Info.plist $(DEV_BUNDLE)/Contents/Info.plist
+	cp Resources/AppIcon.icns $(DEV_BUNDLE)/Contents/Resources/AppIcon.icns
 	$(MAKE) sign BUNDLE_PATH="$(DEV_BUNDLE)"
+
+# Regenerate the app icon from Scripts/make_icon.swift. Run when you tweak
+# the design; commit the resulting .icns so users don't need to rebuild it.
+icon:
+	swift Scripts/make_icon.swift
+	iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
+	rm -rf Resources/AppIcon.iconset
+	@echo "Wrote Resources/AppIcon.icns"
 
 install: dev
 	pkill -x $(APP_NAME) || true

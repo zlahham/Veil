@@ -33,6 +33,28 @@ final class HotkeyRecorderField: NSTextField {
 
     override var acceptsFirstResponder: Bool { true }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // Grab focus immediately so the user can just type the combo.
+        DispatchQueue.main.async { [weak self] in
+            self?.window?.makeFirstResponder(self)
+        }
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let ok = super.becomeFirstResponder()
+        if ok { stringValue = "Press a key…" }
+        return ok
+    }
+
+    override func resignFirstResponder() -> Bool {
+        // If we resign without having captured a combo, restore the placeholder.
+        if stringValue == "Press a key…" {
+            stringValue = ""
+        }
+        return super.resignFirstResponder()
+    }
+
     override func keyDown(with event: NSEvent) {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 

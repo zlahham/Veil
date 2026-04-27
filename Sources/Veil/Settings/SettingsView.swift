@@ -27,9 +27,9 @@ struct SettingsView: View {
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "eye.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 96, height: 96)
 
             Text("Veil")
                 .font(.title)

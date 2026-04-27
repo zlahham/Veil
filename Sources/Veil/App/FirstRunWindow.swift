@@ -56,9 +56,9 @@ private struct FirstRunContentView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 48, weight: .bold))
-                .foregroundStyle(.tint)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 96, height: 96)
 
             Text("Welcome to Veil")
                 .font(.title)
