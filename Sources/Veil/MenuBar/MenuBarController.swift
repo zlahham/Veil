@@ -78,7 +78,9 @@ final class MenuBarController {
         guard interval > 0 else { return }
         cancelRehideTimer()
         rehideTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
-            Task { @MainActor in self?.hide() }
+            Task { @MainActor [weak self] in
+                self?.hide()
+            }
         }
     }
 
