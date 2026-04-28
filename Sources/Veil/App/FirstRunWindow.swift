@@ -33,15 +33,12 @@ final class FirstRunWindow {
             w.center()
             window = w
         }
-        NSApp.setActivationPolicy(.regular) // show in dock briefly so window gets focus
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
     private func dismiss() {
         window?.orderOut(nil)
-        // Restore menu-bar-only mode.
-        NSApp.setActivationPolicy(.accessory)
         VeilSettings.shared.firstRunCompleted = true
         onContinue?()
         onContinue = nil

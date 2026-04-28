@@ -8,10 +8,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Veil",
-            path: "Sources/Veil",
-            swiftSettings: [
-                .unsafeFlags(["-parse-as-library"]),
-            ]
+            path: "Sources/Veil"
         ),
     ]
 )

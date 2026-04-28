@@ -8,8 +8,7 @@ DEV_BUNDLE = $(BUNDLE)
 ENTITLEMENTS = Resources/Veil.entitlements
 
 SWIFT = swiftc
-SWIFTFLAGS = -parse-as-library \
-	-target arm64-apple-macosx14.0 \
+SWIFTFLAGS = -target arm64-apple-macosx14.0 \
 	-sdk $(shell xcrun --show-sdk-path) \
 	-framework AppKit \
 	-framework SwiftUI \
@@ -45,7 +44,18 @@ run: bundle
 # Build with SPM and stage an in-tree Veil.app/ for launching.
 # Re-creates the bundle scaffolding from Resources/ so the working tree
 # stays clean. Ad-hoc signs to keep TCC permissions stable across rebuilds.
+#
+# Refuses to run if /Applications/Veil.app exists — two ad-hoc-signed bundles
+# with the same identifier but different cdhashes confuse TCC and Accessibility
+# grants stop registering. Run `brew uninstall --cask veil` first.
 dev:
+	@if [ -e /Applications/$(BUNDLE) ]; then \
+		echo "Error: /Applications/$(BUNDLE) exists."; \
+		echo "Remove it before running a dev build (TCC conflicts on identical bundle IDs):"; \
+		echo "  brew uninstall --cask veil   # if installed via brew"; \
+		echo "  rm -rf /Applications/$(BUNDLE)  # otherwise"; \
+		exit 1; \
+	fi
 	swift build
 	mkdir -p $(DEV_BUNDLE)/Contents/MacOS
 	mkdir -p $(DEV_BUNDLE)/Contents/Resources
