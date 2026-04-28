@@ -70,7 +70,16 @@ final class ControlItem: NSObject {
         button.imagePosition = .imageOnly
         button.target = self
         button.action = #selector(clicked)
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        button.sendAction(on: [.leftMouseDown, .rightMouseUp])
+        // Suppress the button's bezel + highlight. Without this, when the
+        // button is in its wide push state, the click/hover highlight
+        // renders as a 280px translucent bar across the menu bar.
+        button.isBordered = false
+        if let cell = button.cell as? NSButtonCell {
+            cell.highlightsBy = []
+            cell.isBordered = false
+            cell.bezelStyle = .inline
+        }
         // Image is set by applyState.
     }
 
@@ -121,7 +130,7 @@ final class ControlItem: NSObject {
         case .showItems:
             statusItem.isVisible = true
             statusItem.length = NSStatusItem.variableLength
-            statusItem.button?.image = NSImage(systemSymbolName: icon.shownSymbol, accessibilityDescription: "Veil")
+            statusItem.button?.image = NSImage(systemSymbolName: icon.shownSymbol, accessibilityDescription: "Hide items")
             resizeWindow(to: 26)
         }
     }

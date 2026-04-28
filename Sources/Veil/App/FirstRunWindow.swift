@@ -30,7 +30,20 @@ final class FirstRunWindow {
             w.styleMask = [.titled, .closable]
             w.isReleasedWhenClosed = false
             w.setContentSize(NSSize(width: 440, height: 340))
-            w.center()
+            // NSScreen.screens.first is the primary display (the one with the
+            // menu bar); NSScreen.main follows the key window which on a
+            // multi-monitor setup with a fullscreen app might land elsewhere.
+            let screen = NSScreen.screens.first ?? NSScreen.main
+            if let visible = screen?.visibleFrame {
+                let size = w.frame.size
+                let origin = NSPoint(
+                    x: visible.midX - size.width / 2,
+                    y: visible.midY - size.height / 2
+                )
+                w.setFrameOrigin(origin)
+            } else {
+                w.center()
+            }
             window = w
         }
         NSApp.activate(ignoringOtherApps: true)
