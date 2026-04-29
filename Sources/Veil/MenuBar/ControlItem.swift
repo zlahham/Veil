@@ -93,19 +93,40 @@ final class ControlItem: NSObject {
     }
 
     private func showContextMenu() {
+        // Refresh from cache; trigger a network call only if cache is stale.
+        UpdateChecker.shared.checkIfStale()
+
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show Item List...", action: #selector(openIceBar), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(.separator())
+        menu.addItem(updateMenuItem())
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit Veil", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
-        for item in menu.items { item.target = self }
+        for item in menu.items where item.action != nil { item.target = self }
         menu.items.last?.target = NSApp
 
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil
+    }
+
+    private func updateMenuItem() -> NSMenuItem {
+        let checker = UpdateChecker.shared
+        let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        if checker.updateAvailable, let tag = checker.latestVersion {
+            let item = NSMenuItem(title: "Download \(tag)…", action: #selector(downloadUpdate), keyEquivalent: "")
+            return item
+        }
+        let item = NSMenuItem(title: "You're on the latest (v\(current))", action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
+    }
+
+    @objc private func downloadUpdate() {
+        NSWorkspace.shared.open(UpdateChecker.shared.downloadURL)
     }
 
     @objc private func openIceBar() {

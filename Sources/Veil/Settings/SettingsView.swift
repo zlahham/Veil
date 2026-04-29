@@ -25,6 +25,8 @@ struct SettingsView: View {
 }
 
 struct AboutView: View {
+    @ObservedObject private var updateChecker = UpdateChecker.shared
+
     var body: some View {
         VStack(spacing: 12) {
             // Bypass macOS's app-icon styling pipeline (which adds Liquid
@@ -49,7 +51,28 @@ struct AboutView: View {
             Text("A lightweight menu bar manager for macOS")
                 .foregroundStyle(.secondary)
                 .font(.caption)
+
+            updateStatus
+                .padding(.top, 8)
         }
-        .frame(width: 380, height: 200)
+        .frame(width: 380, height: 240)
+        .onAppear { updateChecker.checkNow() }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        if updateChecker.updateAvailable, let tag = updateChecker.latestVersion {
+            Button {
+                NSWorkspace.shared.open(updateChecker.downloadURL)
+            } label: {
+                Label("Update available — \(tag)", systemImage: "arrow.down.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        } else if updateChecker.latestVersion != nil {
+            Label("You're on the latest version", systemImage: "checkmark.circle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }

@@ -22,6 +22,9 @@ final class AppController {
             self?.itemStore.refresh()
         }
 
+        // Cheap once-a-day GitHub release poll.
+        UpdateChecker.shared.checkIfStale()
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(toggleIceBar(_:)),
