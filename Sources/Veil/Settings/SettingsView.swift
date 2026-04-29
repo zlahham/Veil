@@ -27,9 +27,15 @@ struct SettingsView: View {
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 12) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 96, height: 96)
+            // Bypass macOS's app-icon styling pipeline (which adds Liquid
+            // Glass bevel on Tahoe) by loading the raw .icns directly.
+            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+               let raw = NSImage(contentsOf: url) {
+                Image(nsImage: raw)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 96, height: 96)
+            }
 
             Text("Veil")
                 .font(.title)

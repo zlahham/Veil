@@ -66,9 +66,16 @@ private struct FirstRunContentView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 96, height: 96)
+            // Load the raw .icns instead of NSApp.applicationIconImage —
+            // the latter triggers macOS Tahoe's Liquid Glass treatment which
+            // adds a glossy bevel around the icon.
+            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+               let raw = NSImage(contentsOf: url) {
+                Image(nsImage: raw)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 96, height: 96)
+            }
 
             Text("Welcome to Veil")
                 .font(.title)
