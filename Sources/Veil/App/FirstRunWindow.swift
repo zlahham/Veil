@@ -30,6 +30,11 @@ final class FirstRunWindow {
             w.styleMask = [.titled, .closable]
             w.isReleasedWhenClosed = false
             w.setContentSize(NSSize(width: 440, height: 340))
+            // Keep the welcome window above other apps and visible across
+            // spaces — including when System Settings is fullscreen — so
+            // the user doesn't lose it after clicking "Grant Accessibility".
+            w.level = .floating
+            w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             // NSScreen.screens.first is the primary display (the one with the
             // menu bar); NSScreen.main follows the key window which on a
             // multi-monitor setup with a fullscreen app might land elsewhere.

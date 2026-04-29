@@ -20,7 +20,7 @@ SWIFTFLAGS = -target arm64-apple-macosx14.0 \
 
 SOURCES = $(shell find Sources -name '*.swift')
 
-.PHONY: build run clean bundle install sign dev icon release
+.PHONY: build run clean bundle install sign dev icon release nuke
 
 build: $(BINARY)
 
@@ -102,3 +102,19 @@ sign:
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+# Full wipe of every Veil install on this machine — brew cask, /Applications,
+# in-tree dev bundle, UserDefaults, Accessibility TCC entry, brew download
+# cache. Leaves the source tree alone. Use to start fresh before testing
+# the install/first-run flow.
+nuke:
+	-pkill -x $(APP_NAME) 2>/dev/null
+	-brew uninstall --cask veil 2>/dev/null
+	-brew untap zlahham/veil 2>/dev/null
+	-rm -rf /Applications/$(BUNDLE)
+	-rm -rf $(DEV_BUNDLE)
+	-defaults delete com.veil.app 2>/dev/null
+	-tccutil reset Accessibility com.veil.app 2>/dev/null
+	-rm -f ~/Library/Caches/Homebrew/downloads/*veil* 2>/dev/null
+	@echo ""
+	@echo "Veil fully wiped from this machine."
