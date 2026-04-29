@@ -45,7 +45,9 @@ func render(size: CGFloat) -> NSImage {
     }
 
     // Single full-canvas squircle with a thick wine border and the V mark.
-    // No offset shadow — reads identically on any background.
+    // Two solid fills (wine outer, blush inner) instead of a stroked border —
+    // strokes leave a 1-px partial-alpha gap at the corners where the blush
+    // shows through and reads as a white outline.
     let outerRadius = size * 0.225
     let outerRect = CGRect(x: 0, y: 0, width: size, height: size)
     let borderWidth = size * 0.07
@@ -54,18 +56,16 @@ func render(size: CGFloat) -> NSImage {
     ctx.addPath(roundedRectPath(outerRect, radius: outerRadius))
     ctx.clip()
 
-    // Card fill (covers the full canvas).
-    ctx.setFillColor(card.cgColor)
+    // 1. Fill full canvas with the wine border color.
+    ctx.setFillColor(ink.cgColor)
     ctx.fill(outerRect)
 
-    // Heavy wine border.
-    let borderInset = borderWidth / 2
-    let borderRect = outerRect.insetBy(dx: borderInset, dy: borderInset)
-    let borderRadius = max(0, outerRadius - borderInset)
-    ctx.setStrokeColor(ink.cgColor)
-    ctx.setLineWidth(borderWidth)
-    ctx.addPath(roundedRectPath(borderRect, radius: borderRadius))
-    ctx.strokePath()
+    // 2. Lay the blush card on top, inset by the border thickness.
+    let cardRect = outerRect.insetBy(dx: borderWidth, dy: borderWidth)
+    let cardRadius = max(0, outerRadius - borderWidth)
+    ctx.setFillColor(card.cgColor)
+    ctx.addPath(roundedRectPath(cardRect, radius: cardRadius))
+    ctx.fillPath()
 
     // V monogram centered on the canvas.
     let vWidth = size * 0.56
