@@ -1,12 +1,10 @@
 #!/usr/bin/env swift
 
-// Generates Veil's app icon: a white bolt on a purple→indigo gradient with
-// a macOS-style rounded squircle. Renders all sizes Apple expects in an
-// .iconset, then `iconutil` packages it (called from the Makefile).
+// Generates Veil's app icon: a soft-pastel neo-brutalist sticker — a
+// rounded square with a heavy black border and chunky offset shadow,
+// centered on a thick "V" mark.
 //
 // Run: swift Scripts/make_icon.swift
-//
-// Output: Resources/AppIcon.iconset/icon_<size>.png × N
 
 import AppKit
 
@@ -16,7 +14,6 @@ let outputDir = projectRoot + "/Resources/AppIcon.iconset"
 try? FileManager.default.removeItem(atPath: outputDir)
 try! FileManager.default.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 
-/// macOS .iconset expected entries: (size, scale, suffix).
 let entries: [(size: Int, scale: Int, suffix: String)] = [
     (16, 1, "16x16"),
     (16, 2, "16x16@2x"),
@@ -30,6 +27,16 @@ let entries: [(size: Int, scale: Int, suffix: String)] = [
     (512, 2, "512x512@2x"),
 ]
 
+// Tonal palette — dusty blush card paired with a deep wine ink.
+// Same hue family (red), light tint vs dark shade. Reads soft at a glance,
+// holds high contrast at every size.
+let card = NSColor(srgbRed: 0.96, green: 0.84, blue: 0.84, alpha: 1)   // dusty blush
+let ink  = NSColor(srgbRed: 0.27, green: 0.10, blue: 0.16, alpha: 1)   // deep wine
+
+func roundedRectPath(_ rect: CGRect, radius: CGFloat) -> CGPath {
+    CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+}
+
 func render(size: CGFloat) -> NSImage {
     let image = NSImage(size: NSSize(width: size, height: size))
     image.lockFocus()
@@ -37,62 +44,61 @@ func render(size: CGFloat) -> NSImage {
         fatalError("No graphics context")
     }
 
-    // Rounded squircle background. macOS Big Sur+ uses ~22% corner radius.
-    let radius = size * 0.225
-    let rect = CGRect(x: 0, y: 0, width: size, height: size)
-    let path = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
-
-    ctx.saveGState()
-    ctx.addPath(path)
-    ctx.clip()
-
-    // Vertical gradient: indigo → violet.
-    let colors = [
-        NSColor(srgbRed: 0.36, green: 0.31, blue: 0.78, alpha: 1).cgColor,  // indigo
-        NSColor(srgbRed: 0.59, green: 0.34, blue: 0.91, alpha: 1).cgColor,  // violet
-    ] as CFArray
-    let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
-    ctx.drawLinearGradient(
-        gradient,
-        start: CGPoint(x: 0, y: size),
-        end: CGPoint(x: 0, y: 0),
-        options: []
+    // Sticker fills the canvas. Card sits top-left, shadow peeks bottom-right.
+    // No backdrop fill — area outside the sticker stays transparent so the
+    // dock / Finder show whatever's behind.
+    let shadowOffset = size * 0.07
+    let cardRect = CGRect(
+        x: 0,
+        y: shadowOffset,
+        width: size - shadowOffset,
+        height: size - shadowOffset
     )
+    let shadowRect = cardRect.offsetBy(dx: shadowOffset, dy: -shadowOffset)
+    let cardRadius = size * 0.20
+    let borderWidth = size * 0.05
 
-    // Subtle inner highlight along the top edge.
-    let highlight = NSColor.white.withAlphaComponent(0.18).cgColor
-    ctx.setFillColor(highlight)
-    let highlightRect = CGRect(x: 0, y: size * 0.7, width: size, height: size * 0.3)
-    ctx.fill(highlightRect)
+    // Chunky offset shadow.
+    ctx.setFillColor(ink.cgColor)
+    ctx.addPath(roundedRectPath(shadowRect, radius: cardRadius))
+    ctx.fillPath()
 
-    ctx.restoreGState()
+    // Card fill.
+    ctx.setFillColor(card.cgColor)
+    ctx.addPath(roundedRectPath(cardRect, radius: cardRadius))
+    ctx.fillPath()
 
-    // Draw the bolt symbol centered, white, ~55% of canvas.
-    let symbolSize = size * 0.58
-    if let bolt = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: nil) {
-        let config = NSImage.SymbolConfiguration(pointSize: symbolSize, weight: .heavy)
-        let configured = bolt.withSymbolConfiguration(config) ?? bolt
+    // Card border.
+    let borderInset = borderWidth / 2
+    let borderRect = cardRect.insetBy(dx: borderInset, dy: borderInset)
+    let borderRadius = max(0, cardRadius - borderInset)
+    ctx.setStrokeColor(ink.cgColor)
+    ctx.setLineWidth(borderWidth)
+    ctx.addPath(roundedRectPath(borderRect, radius: borderRadius))
+    ctx.strokePath()
 
-        let originX = (size - symbolSize) / 2
-        let originY = (size - symbolSize) / 2
-        let symbolRect = NSRect(x: originX, y: originY, width: symbolSize, height: symbolSize)
+    // V monogram — two stroked diagonals meeting at the apex. Centered on
+    // the card, not the canvas, so the offset shadow doesn't cause a shift.
+    let vWidth = cardRect.width * 0.62
+    let vHeight = cardRect.height * 0.50
+    let strokeWidth = size * 0.13
+    let vOriginX = cardRect.midX - vWidth / 2
+    let vOriginY = cardRect.midY - vHeight / 2
+    let topY = vOriginY + vHeight
+    let bottomY = vOriginY
 
-        // Render the symbol white via NSGraphicsContext composite mode.
-        ctx.setFillColor(NSColor.white.cgColor)
-        let cgImage = configured.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        if let cg = cgImage {
-            ctx.saveGState()
-            ctx.translateBy(x: 0, y: size)
-            ctx.scaleBy(x: 1, y: -1)
-            let flippedRect = NSRect(x: originX, y: size - originY - symbolSize, width: symbolSize, height: symbolSize)
-            ctx.clip(to: flippedRect, mask: cg)
-            ctx.fill(rect)
-            ctx.restoreGState()
-        } else {
-            // Fallback — draw the symbol normally (will be tinted by template handling).
-            configured.draw(in: symbolRect)
-        }
-    }
+    let vPath = CGMutablePath()
+    vPath.move(to: CGPoint(x: vOriginX, y: topY))
+    vPath.addLine(to: CGPoint(x: vOriginX + vWidth / 2, y: bottomY))
+    vPath.addLine(to: CGPoint(x: vOriginX + vWidth, y: topY))
+
+    ctx.setStrokeColor(ink.cgColor)
+    ctx.setLineWidth(strokeWidth)
+    ctx.setLineJoin(.miter)
+    ctx.setLineCap(.butt)
+    ctx.setMiterLimit(20)
+    ctx.addPath(vPath)
+    ctx.strokePath()
 
     image.unlockFocus()
     return image
