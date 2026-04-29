@@ -44,50 +44,35 @@ func render(size: CGFloat) -> NSImage {
         fatalError("No graphics context")
     }
 
-    // Outer squircle — fill the full canvas with the ink color so the offset
-    // "shadow" is just the visible negative space in the bottom-right L when
-    // the card sits at the top-left. No transparent corners, so macOS doesn't
-    // fall back to its system tile.
+    // Single full-canvas squircle with a thick wine border and the V mark.
+    // No offset shadow — reads identically on any background.
     let outerRadius = size * 0.225
     let outerRect = CGRect(x: 0, y: 0, width: size, height: size)
+    let borderWidth = size * 0.07
+
     ctx.saveGState()
     ctx.addPath(roundedRectPath(outerRect, radius: outerRadius))
     ctx.clip()
-    ctx.setFillColor(ink.cgColor)
+
+    // Card fill (covers the full canvas).
+    ctx.setFillColor(card.cgColor)
     ctx.fill(outerRect)
 
-    let shadowOffset = size * 0.075
-    let cardRect = CGRect(
-        x: 0,
-        y: shadowOffset,
-        width: size - shadowOffset,
-        height: size - shadowOffset
-    )
-    let cardRadius = size * 0.18
-    let borderWidth = size * 0.05
-
-    // Card sits on top of the inked canvas. The L-shape of ink at bottom-right
-    // reads as the chunky offset shadow without a separate shadow rect.
-    ctx.setFillColor(card.cgColor)
-    ctx.addPath(roundedRectPath(cardRect, radius: cardRadius))
-    ctx.fillPath()
-
-    // Card border.
+    // Heavy wine border.
     let borderInset = borderWidth / 2
-    let borderRect = cardRect.insetBy(dx: borderInset, dy: borderInset)
-    let borderRadius = max(0, cardRadius - borderInset)
+    let borderRect = outerRect.insetBy(dx: borderInset, dy: borderInset)
+    let borderRadius = max(0, outerRadius - borderInset)
     ctx.setStrokeColor(ink.cgColor)
     ctx.setLineWidth(borderWidth)
     ctx.addPath(roundedRectPath(borderRect, radius: borderRadius))
     ctx.strokePath()
 
-    // V monogram — two stroked diagonals meeting at the apex. Centered on
-    // the card, not the canvas, so the offset shadow doesn't cause a shift.
-    let vWidth = cardRect.width * 0.62
-    let vHeight = cardRect.height * 0.50
-    let strokeWidth = size * 0.13
-    let vOriginX = cardRect.midX - vWidth / 2
-    let vOriginY = cardRect.midY - vHeight / 2
+    // V monogram centered on the canvas.
+    let vWidth = size * 0.56
+    let vHeight = size * 0.46
+    let strokeWidth = size * 0.14
+    let vOriginX = (size - vWidth) / 2
+    let vOriginY = (size - vHeight) / 2
     let topY = vOriginY + vHeight
     let bottomY = vOriginY
 
