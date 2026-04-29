@@ -44,26 +44,30 @@ func render(size: CGFloat) -> NSImage {
         fatalError("No graphics context")
     }
 
-    // Sticker fills the canvas. Card sits top-left, shadow peeks bottom-right.
-    // No backdrop fill — area outside the sticker stays transparent so the
-    // dock / Finder show whatever's behind.
-    let shadowOffset = size * 0.07
+    // Outer squircle — fill the full canvas with the ink color so the offset
+    // "shadow" is just the visible negative space in the bottom-right L when
+    // the card sits at the top-left. No transparent corners, so macOS doesn't
+    // fall back to its system tile.
+    let outerRadius = size * 0.225
+    let outerRect = CGRect(x: 0, y: 0, width: size, height: size)
+    ctx.saveGState()
+    ctx.addPath(roundedRectPath(outerRect, radius: outerRadius))
+    ctx.clip()
+    ctx.setFillColor(ink.cgColor)
+    ctx.fill(outerRect)
+
+    let shadowOffset = size * 0.075
     let cardRect = CGRect(
         x: 0,
         y: shadowOffset,
         width: size - shadowOffset,
         height: size - shadowOffset
     )
-    let shadowRect = cardRect.offsetBy(dx: shadowOffset, dy: -shadowOffset)
-    let cardRadius = size * 0.20
+    let cardRadius = size * 0.18
     let borderWidth = size * 0.05
 
-    // Chunky offset shadow.
-    ctx.setFillColor(ink.cgColor)
-    ctx.addPath(roundedRectPath(shadowRect, radius: cardRadius))
-    ctx.fillPath()
-
-    // Card fill.
+    // Card sits on top of the inked canvas. The L-shape of ink at bottom-right
+    // reads as the chunky offset shadow without a separate shadow rect.
     ctx.setFillColor(card.cgColor)
     ctx.addPath(roundedRectPath(cardRect, radius: cardRadius))
     ctx.fillPath()
@@ -100,6 +104,7 @@ func render(size: CGFloat) -> NSImage {
     ctx.addPath(vPath)
     ctx.strokePath()
 
+    ctx.restoreGState()
     image.unlockFocus()
     return image
 }
